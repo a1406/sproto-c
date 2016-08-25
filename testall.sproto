@@ -1,0 +1,28 @@
+.foobar {
+    .nest {
+        a 1 : string
+        b 3 : boolean
+        c 5 : *integer
+        d 6 : *string
+        e 7 : integer
+        f 8 : *boolean
+    }
+    a 0 : string
+    b 1 : integer
+    c 2 : boolean
+    d 3 : *nest
+    e 4 : *string
+    f 5 : *integer
+    g 6 : *boolean
+    h 7 : *foobar
+}
+
+
+.t1 {
+    a 1: string
+    b 2: integer
+}
+
+.t2 {
+    a 0 : t1
+}
