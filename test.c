@@ -161,7 +161,7 @@ static int encode2(const struct sproto_arg *args)
 					break;
 				}
 				data += sizeof(uint32_t);
-				ret = sproto_encode(args->subtype, args->value, args->length, encode2, &(*(void ***)data)[args->index - 1]);
+				ret = sproto_encode(args->subtype, args->value, args->length, encode2, (*(void ***)data)[args->index - 1]);
 			}
 			else
 			{
