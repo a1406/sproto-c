@@ -201,13 +201,16 @@ int main(int argc, char *argv[])
 	size_t size =  read(fd, buf, sizeof(buf));
 	struct sproto *sp = sproto_create(&buf[0], size);
 	close(fd);
-	sproto_dump(sp);
+//	sproto_dump(sp);
+
+	struct foobar foobar;
 
 	struct sproto_type *type1 = sproto_type(sp, "aaa");
 	struct sproto_type *type2 = sproto_type(sp, "foobar");
 	struct sproto_type *type3 = sproto_type(sp, "foobar.nest");
-	struct sproto_type *type4 = sproto_type(sp, "t2");	
-	printf("%p %p %p %p\n", type1, type2, type3, type4);
+	struct sproto_type *type4 = sproto_type(sp, "t2");
+	struct sproto_type *type5 = sproto_type(sp, "t1");		
+	printf("%p %p %p %p %p\n", type1, type2, type3, type4, type5);
 
 	int n1 = sproto_prototag(sp, "aaa");
 	int n2 = sproto_prototag(sp, "foobar");

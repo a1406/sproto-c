@@ -2,6 +2,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <assert.h>
+#include <stdbool.h>
 #include "msvcint.h"
 
 #include "sproto.h"
@@ -26,6 +27,7 @@ struct sproto_type {
 	int base;
 	int maxn;
 	struct field *f;
+	int c_size;
 };
 
 struct protocol {
@@ -298,6 +300,7 @@ import_type(struct sproto *s, struct sproto_type *t, const uint8_t * stream) {
 	last = -1;
 	t->n = n;
 	t->f = pool_alloc(&s->memory, sizeof(struct field) * n);
+	t->c_size = 0;
 	for (i=0;i<n;i++) {
 		int tag;
 		struct field *f = &t->f[i];
@@ -311,6 +314,30 @@ import_type(struct sproto *s, struct sproto_type *t, const uint8_t * stream) {
 			++maxn;
 		}
 		last = tag;
+
+		if (f->type & SPROTO_TARRAY)
+		{
+			t->c_size += sizeof(uint32_t);
+			t->c_size += sizeof(void *);
+		}
+		else
+		{
+			switch (f->type)
+			{
+				case SPROTO_TINTEGER:
+					t->c_size += sizeof(uint64_t);
+					break;
+				case SPROTO_TBOOLEAN:
+					t->c_size += sizeof(bool);				
+					break;
+				case SPROTO_TSTRING:
+					t->c_size += sizeof(char *);				
+					break;
+				case SPROTO_TSTRUCT:
+					t->c_size += sizeof(void *);				
+					break;
+			}
+		}
 	}
 	t->maxn = maxn;
 	t->base = t->f[0].tag;
