@@ -8,7 +8,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include "sproto.h"
-
+#include "test.h"
+/*
 struct nest
 {
 	char *a;
@@ -59,7 +60,7 @@ struct t3
 	uint32_t n_c;
 	char **c;
 }__attribute__ ((packed));
-
+*/
 static int encode2(const struct sproto_arg *args)
 {
 	int ret = 0;
@@ -227,7 +228,7 @@ int main(int argc, char *argv[])
 	int n3 = sproto_prototag(sp, "foobar.nest");
 	printf("%d %d %d\n", n1, n2, n3);
 
-	struct nest nest_1;
+	struct foobar_nest nest_1;
 	nest_1.a = strdup("tangpeilei");
 	nest_1.b = true;
 	nest_1.n_c = 10;

@@ -128,7 +128,7 @@ int main(int argc, char *argv[])
 			print_field(&sp->type[i].f[j]);
 		}
 
-		printf("}__attribute__ ((packed))\n\n");
+		printf("}__attribute__ ((packed));\n\n");
 	}
 
 	printf("#endif\n");

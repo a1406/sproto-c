@@ -31,4 +31,5 @@
     b 0 : *boolean
     a 1 : *integer
     c 2 : *string
+    d 3 : *t1
 }
