@@ -50,6 +50,12 @@ struct t2
 	struct t1 *a;
 }__attribute__ ((packed));
 
+struct t3
+{
+	uint32_t n_a;
+	uint64_t *a;
+}__attribute__ ((packed));
+
 static int encode2(const struct sproto_arg *args)
 {
 	int ret = 0;
@@ -254,7 +260,7 @@ int main(int argc, char *argv[])
 
 	int len5 = sproto_decode(type3, buf3, len4, decode, NULL);
 	printf("len5 = %d\n", len5);
-*/
+
 	printf("=========================\n");
 	printf("=========================\n");
 	struct t2 t2_1;
@@ -276,6 +282,17 @@ int main(int argc, char *argv[])
 	fd = open("1.log", O_WRONLY | O_TRUNC | O_CREAT, 00777);
 	write(fd, buf, len6);
 	close(fd);
+*/
+	struct sproto_type *type_t3 = sproto_type(sp, "t3");
+	struct t3 t3_1;
+	t3_1.a = malloc(sizeof(uint64_t) * 10);
+	t3_1.n_a = 10;
+	for (i = 0; i < 10; ++i)
+		t3_1.a[i] = (i + 1) * 0x10;
+	int len_t3 = sproto_encode(type_t3, buf, sizeof(buf), encode2, &t3_1);
+	sproto_decode(type_t3, buf, len_t3, decode, NULL);
+	void *ttt;
+	sproto_decode_c(type_t3, buf, len_t3, &ttt);
 	
     return 0;
 }
