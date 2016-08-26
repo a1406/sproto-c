@@ -6,3 +6,5 @@ sproto c binding，not finished
 想来想去，做C BINDING只能解包两次，这样太傻了，而且做起来很麻烦。
 我试试直接去改sproto吧
 
+差不多了，只差内存释放了。
+
