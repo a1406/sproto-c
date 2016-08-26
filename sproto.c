@@ -1112,6 +1112,7 @@ int sproto_decode_c(const struct sproto_type *st, const void * data, int size, v
 	*ret = malloc(st->c_size);
 	if (!*ret)
 		return -1;
+	void *p = *ret;
 
 	tag = -1;
 	for (i=0;i<fn;i++) {
@@ -1155,8 +1156,8 @@ int sproto_decode_c(const struct sproto_type *st, const void * data, int size, v
 					uint32_t sz = todword(currentdata);
 					if (sz == sizeof(uint32_t)) {
 						uint64_t v = expand64(todword(currentdata + SIZEOF_LENGTH));
-						*(uint64_t *)(*ret) = v;
-						(*ret) += sizeof(uint64_t);
+						*(uint64_t *)(p) = v;
+						(p) += sizeof(uint64_t);
 //						args.value = &v;
 //						args.length = sizeof(v);
 //						cb(&args);
@@ -1166,8 +1167,8 @@ int sproto_decode_c(const struct sproto_type *st, const void * data, int size, v
 						uint32_t low = todword(currentdata + SIZEOF_LENGTH);
 						uint32_t hi = todword(currentdata + SIZEOF_LENGTH + sizeof(uint32_t));
 						uint64_t v = (uint64_t)low | (uint64_t) hi << 32;
-						*(uint64_t *)(*ret) = v;
-						(*ret) += sizeof(uint64_t);
+						*(uint64_t *)(p) = v;
+						(p) += sizeof(uint64_t);
 //						args.value = &v;
 //						args.length = sizeof(v);
 //						cb(&args);
@@ -1176,13 +1177,16 @@ int sproto_decode_c(const struct sproto_type *st, const void * data, int size, v
 				}
 				case SPROTO_TSTRING: {
 					uint32_t sz = todword(currentdata);
-					memcpy(*ret, currentdata+SIZEOF_LENGTH, sz);
-					(*ret) += sz;
+					void **str = p;
+					*str = malloc(sz);
+					memcpy(*str, currentdata+SIZEOF_LENGTH, sz);
+					(p) += sizeof(void *);
 					break;
 				}
 				case SPROTO_TSTRUCT: {
-					int struct_ret = sproto_decode_c(f->st, currentdata, size, &(*ret));
-					(*ret) += sizeof(void *);
+					uint32_t sz = todword(currentdata);
+					int struct_ret = sproto_decode_c(f->st, currentdata+SIZEOF_LENGTH, sz, p);
+					(p) += sizeof(void *);
 //					args.value = currentdata+SIZEOF_LENGTH;
 //					args.length = sz;
 //					if (cb(&args))

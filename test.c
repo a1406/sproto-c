@@ -270,6 +270,9 @@ int main(int argc, char *argv[])
 	int len7 = sproto_decode(type4, buf, len6, decode, &t2_2);
 	printf("decode len = %d\n", len7);
 
+	void *ttt;
+	sproto_decode_c(type4, buf, len6, &ttt);
+
 	fd = open("1.log", O_WRONLY | O_TRUNC | O_CREAT, 00777);
 	write(fd, buf, len6);
 	close(fd);
