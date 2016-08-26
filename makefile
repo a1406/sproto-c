@@ -1,4 +1,4 @@
-all: test proto
+all: proto generate_head test 
 
 CFLAGS = -g -O0
 LDFLAGS = 
@@ -10,5 +10,5 @@ proto: testall.sproto
 	rm 1.spb
 	./spc.sh testall.sproto 1.spb
 
-generate_head: generate_head.c
+generate_head: generate_head.c sproto.c
 	gcc  -o $@ $(CFLAGS) $(LDFLAGS) $^
