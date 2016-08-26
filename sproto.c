@@ -1038,6 +1038,8 @@ static int decode_array_c(int type, uint8_t * stream, void **ret)
 		return 0;
 	}	
 	stream += SIZEOF_LENGTH;
+	uint32_t *n_size = *ret;
+	(*ret) += sizeof(uint32_t);
 	switch (type) {
 	case SPROTO_TINTEGER: {
 		int len = *stream;
@@ -1102,6 +1104,7 @@ static int decode_array_c(int type, uint8_t * stream, void **ret)
 	default:
 		return -1;
 	}
+	(*ret) += sizeof(void *);
 	return 0;
 }
 
