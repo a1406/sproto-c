@@ -1155,6 +1155,8 @@ int sproto_decode_c(const struct sproto_type *st, const void * data, int size, v
 					uint32_t sz = todword(currentdata);
 					if (sz == sizeof(uint32_t)) {
 						uint64_t v = expand64(todword(currentdata + SIZEOF_LENGTH));
+						*(uint64_t *)(*ret) = v;
+						(*ret) += sizeof(uint64_t);
 //						args.value = &v;
 //						args.length = sizeof(v);
 //						cb(&args);
@@ -1164,6 +1166,8 @@ int sproto_decode_c(const struct sproto_type *st, const void * data, int size, v
 						uint32_t low = todword(currentdata + SIZEOF_LENGTH);
 						uint32_t hi = todword(currentdata + SIZEOF_LENGTH + sizeof(uint32_t));
 						uint64_t v = (uint64_t)low | (uint64_t) hi << 32;
+						*(uint64_t *)(*ret) = v;
+						(*ret) += sizeof(uint64_t);
 //						args.value = &v;
 //						args.length = sizeof(v);
 //						cb(&args);
@@ -1187,6 +1191,18 @@ int sproto_decode_c(const struct sproto_type *st, const void * data, int size, v
 			return -1;
 		} else {
 			uint64_t v = value;
+
+			switch (f->type)
+			{
+				case SPROTO_TINTEGER:
+					*(uint64_t *)(*ret) = v;
+					(*ret) += sizeof(uint64_t);
+					break;
+				case SPROTO_TBOOLEAN:
+					*(bool *)(*ret) = v;
+					(*ret) += sizeof(bool);					
+					break;
+			}
 //			args.value = &v;
 //			args.length = sizeof(v);
 //			cb(&args);
