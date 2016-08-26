@@ -992,6 +992,39 @@ sproto_encode(const struct sproto_type *st, void * buffer, int size, sproto_call
 	return SIZEOF_HEADER + index * SIZEOF_FIELD + datasz;
 }
 
+static int decode_array_object_c(int type, uint8_t * stream, int sz, void **ret)
+{
+	uint32_t hsz;
+	int index = 1;
+	int n_size = count_array(stream);
+	(*ret) = malloc(sizeof(void *) * n_size);
+	char **p = (char **)ret;
+	int i = 0;
+	while (sz > 0) {
+		if (sz < SIZEOF_LENGTH)
+			return -1;
+		hsz = todword(stream);
+		stream += SIZEOF_LENGTH;
+		sz -= SIZEOF_LENGTH;
+		if (hsz > sz)
+			return -1;
+//		args->index = index;
+//		args->value = stream;
+//		args->length = hsz;
+//		if (cb(args))
+//			return -1;
+		if (type == SPROTO_TSTRING) {
+			memcpy(p[i], stream, hsz);
+			++i;
+		} else {
+		}
+		sz -= hsz;
+		stream += hsz;
+		++index;
+	}
+	return 0;
+}
+
 static int
 decode_array_object(sproto_callback cb, struct sproto_arg *args, uint8_t * stream, int sz) {
 	uint32_t hsz;
@@ -1100,7 +1133,7 @@ static int decode_array_c(int type, uint8_t * stream, void **ret)
 	}
 	case SPROTO_TSTRING:
 	case SPROTO_TSTRUCT:
-//		return decode_array_object(cb, args, stream, sz);
+		return decode_array_object_c(type, stream, sz, ret);
 	default:
 		return -1;
 	}
