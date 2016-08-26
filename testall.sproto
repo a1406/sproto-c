@@ -30,4 +30,5 @@
 .t3 {
     b 0 : *boolean
     a 1 : *integer
+    c 2 : *string
 }

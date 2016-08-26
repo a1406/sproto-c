@@ -56,6 +56,8 @@ struct t3
 	bool *b;
 	uint32_t n_a;
 	uint64_t *a;
+	uint32_t n_c;
+	char **c;
 }__attribute__ ((packed));
 
 static int encode2(const struct sproto_arg *args)
@@ -297,7 +299,15 @@ int main(int argc, char *argv[])
 	t3_1.b[1] = true;
 	t3_1.b[2] = false;
 	t3_1.b[3] = true;
-	t3_1.b[4] = false;	
+	t3_1.b[4] = false;
+
+	t3_1.c = malloc(sizeof(char *) * 4);
+	t3_1.n_c = 4;
+	t3_1.c[0] = "11111";
+	t3_1.c[1] = "22222222";
+	t3_1.c[2] = "333";
+	t3_1.c[3] = "444444";	
+	
 	int len_t3 = sproto_encode(type_t3, buf, sizeof(buf), encode2, &t3_1);
 	struct t3 *ttt;
 	sproto_decode_c(type_t3, buf, len_t3, (void **)&ttt);
