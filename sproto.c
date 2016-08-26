@@ -992,10 +992,11 @@ sproto_encode(const struct sproto_type *st, void * buffer, int size, sproto_call
 	return SIZEOF_HEADER + index * SIZEOF_FIELD + datasz;
 }
 
-static int decode_array_object_c(int type, uint8_t * stream, int sz, void **ret)
+static int decode_array_object_c(struct field *f, uint8_t * stream, int sz, void **ret)
 {
 	uint32_t hsz;
 	int index = 1;
+	int type = f->type & ~SPROTO_TARRAY;	
 	int n_size = count_array(stream);
 	(*ret) = malloc(sizeof(void *) * n_size);
 	char **p = (char **)ret;
@@ -1017,6 +1018,7 @@ static int decode_array_object_c(int type, uint8_t * stream, int sz, void **ret)
 			memcpy(p[i], stream, hsz);
 			++i;
 		} else {
+			int struct_ret = sproto_decode_c(f->st, stream, sz, ret);
 		}
 		sz -= hsz;
 		stream += hsz;
@@ -1058,10 +1060,11 @@ expand64(uint32_t v) {
 	return value;
 }
 
-static int decode_array_c(int type, uint8_t * stream, void **ret)
+static int decode_array_c(struct field *f, uint8_t * stream, void **ret)
 {
 	uint32_t sz = todword(stream);
 	int i;
+	int type = f->type & ~SPROTO_TARRAY;
 	if (sz == 0) {
 		// It's empty array, call cb with index == -1 to create the empty array.
 //		args->index = -1;
@@ -1133,7 +1136,7 @@ static int decode_array_c(int type, uint8_t * stream, void **ret)
 	}
 	case SPROTO_TSTRING:
 	case SPROTO_TSTRUCT:
-		return decode_array_object_c(type, stream, sz, ret);
+		return decode_array_object_c(f, stream, sz, ret);
 	default:
 		return -1;
 	}
@@ -1263,7 +1266,7 @@ int sproto_decode_c(const struct sproto_type *st, const void * data, int size, v
 //		args.mainindex = f->key;
 		if (value < 0) {
 			if (f->type & SPROTO_TARRAY) {
-				if (decode_array_c(f->type & ~SPROTO_TARRAY, currentdata, p)) {
+				if (decode_array_c(f, currentdata, p)) {
 					return -1;
 				}
 			} else {
