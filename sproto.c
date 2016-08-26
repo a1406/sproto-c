@@ -1174,9 +1174,15 @@ int sproto_decode_c(const struct sproto_type *st, const void * data, int size, v
 					}
 					break;
 				}
-				case SPROTO_TSTRING:
-				case SPROTO_TSTRUCT: {
+				case SPROTO_TSTRING: {
 					uint32_t sz = todword(currentdata);
+					memcpy(*ret, currentdata+SIZEOF_LENGTH, sz);
+					(*ret) += sz;
+					break;
+				}
+				case SPROTO_TSTRUCT: {
+					int struct_ret = sproto_decode_c(f->st, currentdata, size, &(*ret));
+					(*ret) += sizeof(void *);
 //					args.value = currentdata+SIZEOF_LENGTH;
 //					args.length = sz;
 //					if (cb(&args))
