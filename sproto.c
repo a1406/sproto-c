@@ -1089,6 +1089,112 @@ decode_array(sproto_callback cb, struct sproto_arg *args, uint8_t * stream) {
 	return 0;
 }
 
+int sproto_decode_c(const struct sproto_type *st, const void * data, int size, void **ret)
+{
+	int total = size;
+	uint8_t * stream;
+	uint8_t * datastream;
+	int fn;
+	int i;
+	int tag;
+	if (size < SIZEOF_HEADER)
+		return -1;
+
+	stream = (void *)data;
+	fn = toword(stream);
+	stream += SIZEOF_HEADER;
+	size -= SIZEOF_HEADER ;
+	if (size < fn * SIZEOF_FIELD)
+		return -1;
+	datastream = stream + fn * SIZEOF_FIELD;
+	size -= fn * SIZEOF_FIELD;
+
+	*ret = malloc(st->c_size);
+	if (!*ret)
+		return -1;
+
+	tag = -1;
+	for (i=0;i<fn;i++) {
+		uint8_t * currentdata;
+		struct field * f;
+		int value = toword(stream + i * SIZEOF_FIELD);
+		++ tag;
+		if (value & 1) {
+			tag += value/2;
+			continue;
+		}
+		value = value/2 - 1;
+		currentdata = datastream;
+		if (value < 0) {
+			uint32_t sz;
+			if (size < SIZEOF_LENGTH)
+				return -1;
+			sz = todword(datastream);
+			if (size < sz + SIZEOF_LENGTH)
+				return -1;
+			datastream += sz+SIZEOF_LENGTH;
+			size -= sz+SIZEOF_LENGTH;
+		}
+		f = findtag(st, tag);
+		if (f == NULL)
+			continue;
+//		args.tagname = f->name;
+//		args.tagid = f->tag;
+//		args.type = f->type & ~SPROTO_TARRAY;
+//		args.subtype = f->st;
+//		args.index = 0;
+//		args.mainindex = f->key;
+		if (value < 0) {
+			if (f->type & SPROTO_TARRAY) {
+//				if (decode_array(cb, &args, currentdata)) {
+//					return -1;
+//				}
+			} else {
+				switch (f->type) {
+				case SPROTO_TINTEGER: {
+					uint32_t sz = todword(currentdata);
+					if (sz == sizeof(uint32_t)) {
+						uint64_t v = expand64(todword(currentdata + SIZEOF_LENGTH));
+//						args.value = &v;
+//						args.length = sizeof(v);
+//						cb(&args);
+					} else if (sz != sizeof(uint64_t)) {
+						return -1;
+					} else {
+						uint32_t low = todword(currentdata + SIZEOF_LENGTH);
+						uint32_t hi = todword(currentdata + SIZEOF_LENGTH + sizeof(uint32_t));
+						uint64_t v = (uint64_t)low | (uint64_t) hi << 32;
+//						args.value = &v;
+//						args.length = sizeof(v);
+//						cb(&args);
+					}
+					break;
+				}
+				case SPROTO_TSTRING:
+				case SPROTO_TSTRUCT: {
+					uint32_t sz = todword(currentdata);
+//					args.value = currentdata+SIZEOF_LENGTH;
+//					args.length = sz;
+//					if (cb(&args))
+//						return -1;
+					break;
+				}
+				default:
+					return -1;
+				}
+			}
+		} else if (f->type != SPROTO_TINTEGER && f->type != SPROTO_TBOOLEAN) {
+			return -1;
+		} else {
+			uint64_t v = value;
+//			args.value = &v;
+//			args.length = sizeof(v);
+//			cb(&args);
+		}
+	}
+	return total - size;
+}
+
 int
 sproto_decode(const struct sproto_type *st, const void * data, int size, sproto_callback cb, void *ud) {
 	struct sproto_arg args;
