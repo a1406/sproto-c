@@ -1024,7 +1024,8 @@ static int decode_array_object_c(struct field *f, uint8_t * stream, int sz, void
 			memcpy((*p)[i], stream, hsz);
 			++i;
 		} else {
-			int struct_ret = sproto_decode_c(f->st, stream, sz, ret);
+			int struct_ret = sproto_decode_c(f->st, stream, sz, &(*p)[i]);
+			++i;
 		}
 		sz -= hsz;
 		stream += hsz;
