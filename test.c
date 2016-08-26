@@ -52,6 +52,8 @@ struct t2
 
 struct t3
 {
+	uint32_t n_b;
+	bool *b;
 	uint32_t n_a;
 	uint64_t *a;
 }__attribute__ ((packed));
@@ -289,10 +291,16 @@ int main(int argc, char *argv[])
 	t3_1.n_a = 10;
 	for (i = 0; i < 10; ++i)
 		t3_1.a[i] = (i + 1) * 0x10;
+	t3_1.b = malloc(sizeof(bool) * 5);
+	t3_1.n_b = 5;
+	t3_1.b[0] = false;
+	t3_1.b[1] = true;
+	t3_1.b[2] = false;
+	t3_1.b[3] = true;
+	t3_1.b[4] = false;	
 	int len_t3 = sproto_encode(type_t3, buf, sizeof(buf), encode2, &t3_1);
-	sproto_decode(type_t3, buf, len_t3, decode, NULL);
-	void *ttt;
-	sproto_decode_c(type_t3, buf, len_t3, &ttt);
+	struct t3 *ttt;
+	sproto_decode_c(type_t3, buf, len_t3, (void **)&ttt);
 	
     return 0;
 }

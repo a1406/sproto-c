@@ -28,5 +28,6 @@
 }
 
 .t3 {
-    a 0 : *integer
+    b 0 : *boolean
+    a 1 : *integer
 }

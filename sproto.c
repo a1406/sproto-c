@@ -1060,7 +1060,7 @@ expand64(uint32_t v) {
 	return value;
 }
 
-static int decode_array_c(struct field *f, uint8_t * stream, void **ret)
+static int decode_array_c(struct field *f, uint8_t * stream, void *ret)
 {
 	uint32_t sz = todword(stream);
 	int i;
@@ -1074,8 +1074,8 @@ static int decode_array_c(struct field *f, uint8_t * stream, void **ret)
 		return 0;
 	}	
 	stream += SIZEOF_LENGTH;
-	uint32_t *n_size = *ret;
-	(*ret) += sizeof(uint32_t);
+	uint32_t *n_size = ret;
+	(ret) += sizeof(uint32_t);
 	switch (type) {
 	case SPROTO_TINTEGER: {
 		int len = *stream;
@@ -1084,13 +1084,15 @@ static int decode_array_c(struct field *f, uint8_t * stream, void **ret)
 		if (len == sizeof(uint32_t)) {
 			if (sz % sizeof(uint32_t) != 0)
 				return -1;
-			uint64_t *p = *ret;
-			p = malloc(sizeof(uint64_t) * sz / sizeof(uint32_t));
-			if (!p)
+			uint64_t **p = ret;
+			*p = malloc(sizeof(uint64_t) * sz / sizeof(uint32_t));
+			if (!*p)
 				return -1;
+
+			*n_size = sz/sizeof(uint32_t);
 			for (i=0;i<sz/sizeof(uint32_t);i++) {
 				uint64_t value = expand64(todword(stream + i*sizeof(uint32_t)));
-				p[i] = value;
+				(*p)[i] = value;
 //				args->index = i+1;
 //				args->value = &value;
 //				args->length = sizeof(value);
@@ -1099,15 +1101,17 @@ static int decode_array_c(struct field *f, uint8_t * stream, void **ret)
 		} else if (len == sizeof(uint64_t)) {
 			if (sz % sizeof(uint64_t) != 0)
 				return -1;
-			uint64_t *p = *ret;
-			p = malloc(sizeof(uint64_t) * sz / sizeof(uint64_t));
-			if (!p)
+			uint64_t **p = ret;
+			*p = malloc(sizeof(uint64_t) * sz / sizeof(uint64_t));
+			if (!*p)
 				return -1;
+
+			*n_size = sz/sizeof(uint64_t);			
 			for (i=0;i<sz/sizeof(uint64_t);i++) {
 				uint64_t low = todword(stream + i*sizeof(uint64_t));
 				uint64_t hi = todword(stream + i*sizeof(uint64_t) + sizeof(uint32_t));
 				uint64_t value = low | hi << 32;
-				p[i] = value;
+				(*p)[i] = value;
 //				args->index = i+1;
 //				args->value = &value;
 //				args->length = sizeof(value);
@@ -1120,13 +1124,14 @@ static int decode_array_c(struct field *f, uint8_t * stream, void **ret)
 	}
 	case SPROTO_TBOOLEAN:
 	{
-		bool *p = *ret;
-		p = malloc(sizeof(bool) * sz);
-		if (!p)
+		bool **p = ret;
+		*p = malloc(sizeof(bool) * sz);
+		if (!*p)
 			return -1;
+		*n_size = sz;
 		for (i=0;i<sz;i++) {
 			uint64_t value = stream[i];
-			p[i] = value;
+			(*p)[i] = value;
 //			args->index = i+1;
 //			args->value = &value;
 //			args->length = sizeof(value);
@@ -1140,7 +1145,7 @@ static int decode_array_c(struct field *f, uint8_t * stream, void **ret)
 	default:
 		return -1;
 	}
-	(*ret) += sizeof(void *);
+//	(*ret) += sizeof(void *);
 	return 0;
 }
 
@@ -1269,6 +1274,8 @@ int sproto_decode_c(const struct sproto_type *st, const void * data, int size, v
 				if (decode_array_c(f, currentdata, p)) {
 					return -1;
 				}
+				p += sizeof(uint32_t);
+				p += sizeof(void *);
 			} else {
 				switch (f->type) {
 				case SPROTO_TINTEGER: {
