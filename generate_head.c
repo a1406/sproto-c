@@ -56,6 +56,17 @@ struct sproto {
 	struct protocol * proto;
 };
 
+int escape_type_name(char *name)
+{
+	while(*name)
+	{
+		if (*name == '.')
+			*name = '_';
+		++name;
+	}
+	return (0);
+}
+
 int main(int argc, char *argv[])
 {
 	static char buf[4096000];	
@@ -72,6 +83,7 @@ int main(int argc, char *argv[])
 
 	int i;
 	for (i=0;i<sp->type_n;i++) {
+		escape_type_name((char *)sp->type[i].name);
 		printf("struct %s\n", sp->type[i].name);
 		printf("{\n");
 //		if (strcmp(type_name, sp->type[i].name) == 0) {
