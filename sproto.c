@@ -1025,6 +1025,86 @@ expand64(uint32_t v) {
 	return value;
 }
 
+static int decode_array_c(int type, uint8_t * stream, void **ret)
+{
+	uint32_t sz = todword(stream);
+	int i;
+	if (sz == 0) {
+		// It's empty array, call cb with index == -1 to create the empty array.
+//		args->index = -1;
+//		args->value = NULL;
+//		args->length = 0;
+//		cb(args);
+		return 0;
+	}	
+	stream += SIZEOF_LENGTH;
+	switch (type) {
+	case SPROTO_TINTEGER: {
+		int len = *stream;
+		++stream;
+		--sz;
+		if (len == sizeof(uint32_t)) {
+			if (sz % sizeof(uint32_t) != 0)
+				return -1;
+			uint64_t *p = *ret;
+			p = malloc(sizeof(uint64_t) * sz / sizeof(uint32_t));
+			if (!p)
+				return -1;
+			for (i=0;i<sz/sizeof(uint32_t);i++) {
+				uint64_t value = expand64(todword(stream + i*sizeof(uint32_t)));
+				p[i] = value;
+//				args->index = i+1;
+//				args->value = &value;
+//				args->length = sizeof(value);
+//				cb(args);
+			}
+		} else if (len == sizeof(uint64_t)) {
+			if (sz % sizeof(uint64_t) != 0)
+				return -1;
+			uint64_t *p = *ret;
+			p = malloc(sizeof(uint64_t) * sz / sizeof(uint64_t));
+			if (!p)
+				return -1;
+			for (i=0;i<sz/sizeof(uint64_t);i++) {
+				uint64_t low = todword(stream + i*sizeof(uint64_t));
+				uint64_t hi = todword(stream + i*sizeof(uint64_t) + sizeof(uint32_t));
+				uint64_t value = low | hi << 32;
+				p[i] = value;
+//				args->index = i+1;
+//				args->value = &value;
+//				args->length = sizeof(value);
+//				cb(args);
+			}
+		} else {
+			return -1;
+		}
+		break;
+	}
+	case SPROTO_TBOOLEAN:
+	{
+		bool *p = *ret;
+		p = malloc(sizeof(bool) * sz);
+		if (!p)
+			return -1;
+		for (i=0;i<sz;i++) {
+			uint64_t value = stream[i];
+			p[i] = value;
+//			args->index = i+1;
+//			args->value = &value;
+//			args->length = sizeof(value);
+//			cb(args);
+		}
+		break;
+	}
+	case SPROTO_TSTRING:
+	case SPROTO_TSTRUCT:
+//		return decode_array_object(cb, args, stream, sz);
+	default:
+		return -1;
+	}
+	return 0;
+}
+
 static int
 decode_array(sproto_callback cb, struct sproto_arg *args, uint8_t * stream) {
 	uint32_t sz = todword(stream);
@@ -1147,9 +1227,9 @@ int sproto_decode_c(const struct sproto_type *st, const void * data, int size, v
 //		args.mainindex = f->key;
 		if (value < 0) {
 			if (f->type & SPROTO_TARRAY) {
-//				if (decode_array(cb, &args, currentdata)) {
-//					return -1;
-//				}
+				if (decode_array_c(f->type & ~SPROTO_TARRAY, currentdata, p)) {
+					return -1;
+				}
 			} else {
 				switch (f->type) {
 				case SPROTO_TINTEGER: {
