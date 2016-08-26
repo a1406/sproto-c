@@ -93,6 +93,7 @@ static int encode2(const struct sproto_arg *args)
 			{
 				*(uint64_t *)args->value = *(uint64_t *)data;
 				*p += sizeof(uint64_t);
+				printf("encode int value %lu\n", *(uint64_t *)args->value);
 			}
 			ret = 8;
 			break;
@@ -141,6 +142,8 @@ static int encode2(const struct sproto_arg *args)
 			{
 				ret = strlen(*(char **)(args->ud)) + 1;
 				memcpy(args->value, *(char **)args->ud, ret);
+
+				printf("encode string value %s\n", *(char **)(args->ud));
 				*p += sizeof(void *);
 			}
 			break;
@@ -184,34 +187,35 @@ static int decode(const struct sproto_arg *args)
 		case SPROTO_TINTEGER:
 		{
 			printf("%lx\n", *(uint64_t *)(args->value));
-			void *data = args->ud;			
-			*(uint64_t *)data = *(uint64_t *)args->value;
-			*p += sizeof(uint64_t);			
+//			void *data = args->ud;			
+//			*(uint64_t *)data = *(uint64_t *)args->value;
+//			*p += sizeof(uint64_t);			
 			ret = 8;
 			break;
 		}
 		case SPROTO_TBOOLEAN:
 		{
 			printf("%lx\n", *(uint64_t *)(args->value));
-			void *data = args->ud;			
-			*(bool *)data = *(bool *)args->value;
-			*p += sizeof(bool);			
+//			void *data = args->ud;			
+//			*(bool *)data = *(bool *)args->value;
+//			*p += sizeof(bool);			
 			ret = 8;
 			break;
 		}
 		case SPROTO_TSTRING:
 		{
 			printf("%s\n", (char *)(args->value));
-			void *data = args->ud;
-			*(char **)data = strdup((const char *)(args->value));
-			*p += sizeof(void *);			
+//			void *data = args->ud;
+//			*(char **)data = strdup((const char *)(args->value));
+//			*p += sizeof(void *);			
 			break;
 		}
 		case SPROTO_TSTRUCT:
 		{
-			void *data = args->ud;
-			*(void **)data = malloc(1024);
-			ret = sproto_decode(args->subtype, (args->value), args->length, decode, *(void **)data);			
+//			void *data = args->ud;
+//			*(void **)data = malloc(10240);
+//			ret = sproto_decode(args->subtype, (args->value), args->length, decode, *(void **)data);
+			ret = sproto_decode(args->subtype, (args->value), args->length, decode, NULL);						
 			break;
 		}
 	}
@@ -316,8 +320,10 @@ int main(int argc, char *argv[])
 	t4_1.a[1]->b = 20;
 	
 	int len_t4 = sproto_encode(type_t4, buf, sizeof(buf), encode2, &t4_1);
-	struct t4 *ttt4;
-	sproto_decode_c(type_t4, buf, len_t4, (void **)&ttt4);
+	printf("encode ret %d\n", len_t4);
+	sproto_decode(type_t4, buf, sizeof(buf), encode2, NULL);
+//	struct t4 *ttt4;
+//	sproto_decode_c(type_t4, buf, len_t4, (void **)&ttt4);
 	return (0);
 
 	
