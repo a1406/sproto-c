@@ -173,7 +173,7 @@ static int encode2(const struct sproto_arg *args)
 	return (ret);
 }
 
-static int decode(const struct sproto_arg *args)
+static int decode2(const struct sproto_arg *args)
 {
 	int ret = 0;
 	void **p = (void **)&(args->ud);	
@@ -215,7 +215,7 @@ static int decode(const struct sproto_arg *args)
 //			void *data = args->ud;
 //			*(void **)data = malloc(10240);
 //			ret = sproto_decode(args->subtype, (args->value), args->length, decode, *(void **)data);
-			ret = sproto_decode(args->subtype, (args->value), args->length, decode, NULL);						
+			ret = sproto_decode(args->subtype, (args->value), args->length, decode2, NULL);						
 			break;
 		}
 	}
@@ -321,9 +321,9 @@ int main(int argc, char *argv[])
 	
 	int len_t4 = sproto_encode(type_t4, buf, sizeof(buf), encode2, &t4_1);
 	printf("encode ret %d\n", len_t4);
-	sproto_decode(type_t4, buf, sizeof(buf), encode2, NULL);
-//	struct t4 *ttt4;
-//	sproto_decode_c(type_t4, buf, len_t4, (void **)&ttt4);
+	sproto_decode(type_t4, buf, sizeof(buf), decode2, NULL);
+	struct t4 *ttt4;
+	sproto_decode_c(type_t4, buf, len_t4, (void **)&ttt4);
 	return (0);
 
 	
