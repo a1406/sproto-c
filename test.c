@@ -147,7 +147,23 @@ static int encode2(const struct sproto_arg *args)
 		}
 		case SPROTO_TSTRUCT:
 		{
-			ret = sproto_encode(args->subtype, args->value, args->length, encode2, *(char **)(args->ud));
+			void *data = args->ud;
+			if (args->index > 0)
+			{
+				uint32_t size = *(uint32_t *)data;
+				if (size < args->index)
+				{
+					ret = SPROTO_CB_NIL;
+					*p += (sizeof(uint32_t) + sizeof(void *));
+					break;
+				}
+				data += sizeof(uint32_t);
+				ret = sproto_encode(args->subtype, args->value, args->length, encode2, &(*(void ***)data)[args->index - 1]);
+			}
+			else
+			{
+				ret = sproto_encode(args->subtype, args->value, args->length, encode2, *(char **)(args->ud));
+			}
 			break;
 		}
 	}
@@ -288,6 +304,23 @@ int main(int argc, char *argv[])
 	write(fd, buf, len6);
 	close(fd);
 */
+	struct sproto_type *type_t4 = sproto_type(sp, "t4");
+	struct t4 t4_1;
+	t4_1.n_a = 2;
+	t4_1.a = malloc(sizeof(void *) * 2);
+	t4_1.a[0] = malloc(sizeof(struct t1));
+	t4_1.a[0]->a = "123";
+	t4_1.a[0]->b = 10;
+	t4_1.a[1] = malloc(sizeof(struct t1));
+	t4_1.a[1]->a = "456";
+	t4_1.a[1]->b = 20;
+	
+	int len_t4 = sproto_encode(type_t4, buf, sizeof(buf), encode2, &t4_1);
+	struct t4 *ttt4;
+	sproto_decode_c(type_t4, buf, len_t4, (void **)&ttt4);
+	return (0);
+
+	
 	struct sproto_type *type_t3 = sproto_type(sp, "t3");
 	struct t3 t3_1;
 	t3_1.a = malloc(sizeof(uint64_t) * 10);
@@ -307,7 +340,20 @@ int main(int argc, char *argv[])
 	t3_1.c[0] = "11111";
 	t3_1.c[1] = "22222222";
 	t3_1.c[2] = "333";
-	t3_1.c[3] = "444444";	
+	t3_1.c[3] = "444444";
+
+	t3_1.n_d = 3;
+	t3_1.d = malloc(sizeof(void *) * 3);
+	t3_1.d[0] = malloc(sizeof(struct t1));
+	t3_1.d[1] = malloc(sizeof(struct t1));
+	t3_1.d[2] = malloc(sizeof(struct t1));
+
+	t3_1.d[0]->a = "d0.a";
+	t3_1.d[1]->a = "d1.a";
+	t3_1.d[2]->a = "d1.a";
+	t3_1.d[0]->b = 10;
+	t3_1.d[1]->b = 20;
+	t3_1.d[2]->b = 30;
 	
 	int len_t3 = sproto_encode(type_t3, buf, sizeof(buf), encode2, &t3_1);
 	struct t3 *ttt;
