@@ -328,7 +328,8 @@ int main(int argc, char *argv[])
 	struct pool pool;
 
 	pool_init(&pool);
-	sproto_decode_c(type_t4, buf, len_t4, (void **)&ttt4, &pool);
+	int ret = sproto_decode_c(type_t4, buf, len_t4, (void **)&ttt4, &pool);
+	printf("decode_c type4 ret %d\n", ret);
 	pool_release(&pool);
 	
 	struct sproto_type *type_t3 = sproto_type(sp, "t3");
@@ -368,7 +369,8 @@ int main(int argc, char *argv[])
 	int len_t3 = sproto_encode(type_t3, buf, sizeof(buf), encode2, &t3_1);
 	struct t3 *ttt;
 	pool_init(&pool);
-	sproto_decode_c(type_t3, buf, len_t3, (void **)&ttt, &pool);
+	ret = sproto_decode_c(type_t3, buf, len_t3, (void **)&ttt, &pool);
+	printf("decode_c typet3 ret %d\n", ret);	
 	pool_release(&pool);	
     return 0;
 }
