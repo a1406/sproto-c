@@ -8,4 +8,6 @@ sproto c binding，not finished
 
 差不多了，只差内存释放了。
 
+内存释放也搞定了，还剩下就是安全性检查了。
+
 
