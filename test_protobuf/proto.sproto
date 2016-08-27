@@ -1,0 +1,15 @@
+.subproto {
+	  int1 1 : *integer
+	  str1 2 : *string
+	  bool1 3 : *boolean
+	  int2 4 : *integer
+}
+
+.proto {
+	  int1 1 : integer
+	  str1 2 : string
+	  bool1 3 : boolean
+	  int2 4 : integer
+	  sub 5 : *subproto
+}
+

@@ -3,7 +3,7 @@ message sub_proto
 	repeated uint32 int1 = 1;
 	repeated string str1 = 2;
 	repeated uint32 bool1 = 3;
-	repeated uint64_t int2 = 4;
+	repeated uint64 int2 = 4;
 }
 
 message proto
@@ -11,6 +11,6 @@ message proto
 	required uint32 int1 = 1;
 	required string str1 = 2;
 	required uint32 bool1 = 3;
-	required uint64_t int2 = 4;
+	required uint64 int2 = 4;
 	repeated sub_proto sub = 5;
 }
