@@ -608,6 +608,15 @@ sproto_name(struct sproto_type * st) {
 }
 
 static struct field *
+checktag(const struct sproto_type *st, int i, int tag) {
+	if (i >= st->n)
+		return NULL;
+	if (st->f[i].tag != tag)
+		return NULL;
+	return &st->f[i]; 
+}
+
+static struct field *
 findtag(const struct sproto_type *st, int tag) {
 	int begin, end;
 	if (st->base >=0 ) {
@@ -1246,6 +1255,7 @@ int sproto_decode_c(const struct sproto_type *st, const void * data, int size, v
 	void *p = *ret;
 
 	tag = -1;
+	int tag_index = 0;
 	for (i=0;i<fn;i++) {
 		uint8_t * currentdata;
 		struct field * f;
@@ -1267,7 +1277,7 @@ int sproto_decode_c(const struct sproto_type *st, const void * data, int size, v
 			datastream += sz+SIZEOF_LENGTH;
 			size -= sz+SIZEOF_LENGTH;
 		}
-		f = findtag(st, tag);
+		f = checktag(st, tag_index++, tag);
 		if (f == NULL)
 			continue;
 //		args.tagname = f->name;
