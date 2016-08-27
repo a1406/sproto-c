@@ -5,6 +5,7 @@
 
 struct sproto;
 struct sproto_type;
+struct pool;
 
 #define SPROTO_REQUEST 0
 #define SPROTO_RESPONSE 1
@@ -47,7 +48,7 @@ typedef int (*sproto_callback)(const struct sproto_arg *args);
 
 int sproto_decode(const struct sproto_type *, const void * data, int size, sproto_callback cb, void *ud);
 int sproto_encode(const struct sproto_type *, void * buffer, int size, sproto_callback cb, void *ud);
-int sproto_decode_c(const struct sproto_type *st, const void * data, int size, void **ret);
+int sproto_decode_c(const struct sproto_type *st, const void * data, int size, void **ret, struct pool *pool);
 
 // for debug use
 void sproto_dump(struct sproto *);

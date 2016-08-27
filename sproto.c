@@ -54,14 +54,14 @@ struct sproto {
 	struct protocol * proto;
 };
 
-static void
+void
 pool_init(struct pool *p) {
 	p->header = NULL;
 	p->current = NULL;
 	p->current_used = 0;
 }
 
-static void
+void
 pool_release(struct pool *p) {
 	struct chunk * tmp = p->header;
 	while (tmp) {
@@ -992,7 +992,7 @@ sproto_encode(const struct sproto_type *st, void * buffer, int size, sproto_call
 	return SIZEOF_HEADER + index * SIZEOF_FIELD + datasz;
 }
 
-static int decode_array_object_c(struct field *f, uint8_t * stream, int sz, void *ret)
+static int decode_array_object_c(struct field *f, uint8_t * stream, int sz, void *ret, struct pool *pool)
 {
 	uint32_t hsz;
 	int index = 1;
@@ -1001,7 +1001,7 @@ static int decode_array_object_c(struct field *f, uint8_t * stream, int sz, void
 	*(uint32_t *)ret = n_size;
 	ret += sizeof(uint32_t);
 	void ***p = ret;
-	(*p) = malloc(sizeof(void *) * n_size);
+	(*p) = pool_alloc(pool, sizeof(void *) * n_size);
 	if (!*p)
 		return -1;
 
@@ -1020,11 +1020,11 @@ static int decode_array_object_c(struct field *f, uint8_t * stream, int sz, void
 //		if (cb(args))
 //			return -1;
 		if (type == SPROTO_TSTRING) {
-			(*p)[i] = malloc(hsz);
+			(*p)[i] = pool_alloc(pool, hsz);
 			memcpy((*p)[i], stream, hsz);
 			++i;
 		} else {
-			int struct_ret = sproto_decode_c(f->st, stream, sz, &(*p)[i]);
+			int struct_ret = sproto_decode_c(f->st, stream, sz, &(*p)[i], pool);
 			++i;
 		}
 		sz -= hsz;
@@ -1067,7 +1067,7 @@ expand64(uint32_t v) {
 	return value;
 }
 
-static int decode_array_c(struct field *f, uint8_t * stream, void *ret)
+static int decode_array_c(struct field *f, uint8_t * stream, void *ret, struct pool *pool)
 {
 	uint32_t sz = todword(stream);
 	int i;
@@ -1092,7 +1092,7 @@ static int decode_array_c(struct field *f, uint8_t * stream, void *ret)
 			if (sz % sizeof(uint32_t) != 0)
 				return -1;
 			uint64_t **p = ret;
-			*p = malloc(sizeof(uint64_t) * sz / sizeof(uint32_t));
+			*p = pool_alloc(pool, sizeof(uint64_t) * sz / sizeof(uint32_t));
 			if (!*p)
 				return -1;
 
@@ -1109,7 +1109,7 @@ static int decode_array_c(struct field *f, uint8_t * stream, void *ret)
 			if (sz % sizeof(uint64_t) != 0)
 				return -1;
 			uint64_t **p = ret;
-			*p = malloc(sizeof(uint64_t) * sz / sizeof(uint64_t));
+			*p = pool_alloc(pool, sizeof(uint64_t) * sz / sizeof(uint64_t));
 			if (!*p)
 				return -1;
 
@@ -1132,7 +1132,7 @@ static int decode_array_c(struct field *f, uint8_t * stream, void *ret)
 	case SPROTO_TBOOLEAN:
 	{
 		bool **p = ret;
-		*p = malloc(sizeof(bool) * sz);
+		*p = pool_alloc(pool, sizeof(bool) * sz);
 		if (!*p)
 			return -1;
 		*n_size = sz;
@@ -1148,7 +1148,7 @@ static int decode_array_c(struct field *f, uint8_t * stream, void *ret)
 	}
 	case SPROTO_TSTRING:
 	case SPROTO_TSTRUCT:
-		return decode_array_object_c(f, stream, sz, ret - sizeof(uint32_t));
+		return decode_array_object_c(f, stream, sz, ret - sizeof(uint32_t), pool);
 	default:
 		return -1;
 	}
@@ -1220,7 +1220,7 @@ decode_array(sproto_callback cb, struct sproto_arg *args, uint8_t * stream) {
 	return 0;
 }
 
-int sproto_decode_c(const struct sproto_type *st, const void * data, int size, void **ret)
+int sproto_decode_c(const struct sproto_type *st, const void * data, int size, void **ret, struct pool *pool)
 {
 	int total = size;
 	uint8_t * stream;
@@ -1240,7 +1240,7 @@ int sproto_decode_c(const struct sproto_type *st, const void * data, int size, v
 	datastream = stream + fn * SIZEOF_FIELD;
 	size -= fn * SIZEOF_FIELD;
 
-	*ret = malloc(st->c_size);
+	*ret = pool_alloc(pool, st->c_size);
 	if (!*ret)
 		return -1;
 	void *p = *ret;
@@ -1278,7 +1278,7 @@ int sproto_decode_c(const struct sproto_type *st, const void * data, int size, v
 //		args.mainindex = f->key;
 		if (value < 0) {
 			if (f->type & SPROTO_TARRAY) {
-				if (decode_array_c(f, currentdata, p)) {
+				if (decode_array_c(f, currentdata, p, pool)) {
 					return -1;
 				}
 				p += sizeof(uint32_t);
@@ -1311,14 +1311,14 @@ int sproto_decode_c(const struct sproto_type *st, const void * data, int size, v
 				case SPROTO_TSTRING: {
 					uint32_t sz = todword(currentdata);
 					void **str = p;
-					*str = malloc(sz);
+					*str = pool_alloc(pool, sz);
 					memcpy(*str, currentdata+SIZEOF_LENGTH, sz);
 					(p) += sizeof(void *);
 					break;
 				}
 				case SPROTO_TSTRUCT: {
 					uint32_t sz = todword(currentdata);
-					int struct_ret = sproto_decode_c(f->st, currentdata+SIZEOF_LENGTH, sz, p);
+					int struct_ret = sproto_decode_c(f->st, currentdata+SIZEOF_LENGTH, sz, p, pool);
 					(p) += sizeof(void *);
 //					args.value = currentdata+SIZEOF_LENGTH;
 //					args.length = sz;

@@ -8,7 +8,9 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include "sproto.h"
+#include "common.h"
 #include "test.h"
+
 /*
 struct nest
 {
@@ -323,9 +325,11 @@ int main(int argc, char *argv[])
 	printf("encode ret %d\n", len_t4);
 	sproto_decode(type_t4, buf, sizeof(buf), decode2, NULL);
 	struct t4 *ttt4;
-	sproto_decode_c(type_t4, buf, len_t4, (void **)&ttt4);
-	return (0);
+	struct pool pool;
 
+	pool_init(&pool);
+	sproto_decode_c(type_t4, buf, len_t4, (void **)&ttt4, &pool);
+	pool_release(&pool);
 	
 	struct sproto_type *type_t3 = sproto_type(sp, "t3");
 	struct t3 t3_1;
@@ -363,7 +367,8 @@ int main(int argc, char *argv[])
 	
 	int len_t3 = sproto_encode(type_t3, buf, sizeof(buf), encode2, &t3_1);
 	struct t3 *ttt;
-	sproto_decode_c(type_t3, buf, len_t3, (void **)&ttt);
-	
+	pool_init(&pool);
+	sproto_decode_c(type_t3, buf, len_t3, (void **)&ttt, &pool);
+	pool_release(&pool);	
     return 0;
 }
