@@ -8,7 +8,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include "sproto.h"
-#include "common.h"
+#include "sprotoc_common.h"
 #include "test.h"
 
 /*
@@ -63,117 +63,6 @@ struct t3
 	char **c;
 }__attribute__ ((packed));
 */
-static int encode2(const struct sproto_arg *args)
-{
-	int ret = 0;
-	void **p = (void **)&(args->ud);
-
-	printf("%s tag[%d] type[%d] subtype[%p] value[%p] length[%d] index[%d] mainindex[%d]\n",
-		args->tagname, args->tagid, args->type, args->subtype, args->value, args->length,
-		args->index, args->mainindex);
-	
-//	char *p = args->ud;
-	switch (args->type)
-	{
-		case SPROTO_TINTEGER:
-		{
-			void *data = args->ud;
-			if (args->index > 0)
-			{
-				uint32_t size = *(uint32_t *)data;
-				if (size < args->index)
-				{
-					ret = SPROTO_CB_NIL;
-					*p += (sizeof(uint32_t) + sizeof(void *));
-					break;
-				}
-				data += sizeof(uint32_t);
-//				data = *(char **)data + sizeof(uint64_t) * (args->index - 1);
-				*(uint64_t *)args->value = (*(uint64_t **)data)[args->index - 1];
-			}
-			else
-			{
-				*(uint64_t *)args->value = *(uint64_t *)data;
-				*p += sizeof(uint64_t);
-				printf("encode int value %lu\n", *(uint64_t *)args->value);
-			}
-			ret = 8;
-			break;
-		}
-		case SPROTO_TBOOLEAN:
-		{
-			void *data = args->ud;
-			if (args->index > 0)
-			{
-				uint32_t size = *(uint32_t *)data;
-				if (size < args->index)
-				{
-					ret = SPROTO_CB_NIL;
-					*p += (sizeof(uint32_t) + sizeof(void *));
-					break;
-				}
-				data += sizeof(uint32_t);
-				*(bool *)args->value = (*(bool **)data)[args->index - 1];				
-			}
-			else
-			{
-				*(int *)args->value = *(bool *)args->ud;
-				*p += sizeof(bool);			
-				ret = 8;
-			}
-			break;
-		}
-		case SPROTO_TSTRING:
-		{
-			void *data = args->ud;
-			if (args->index > 0)
-			{
-				uint32_t size = *(uint32_t *)data;
-				if (size < args->index)
-				{
-					ret = SPROTO_CB_NIL;
-					*p += (sizeof(uint32_t) + sizeof(void *));
-					break;
-				}
-				data += sizeof(uint32_t);
-				char *str = (*(char ***)data)[args->index - 1];
-				ret = strlen(str) + 1;
-				memcpy(args->value, str, ret);
-			}
-			else
-			{
-				ret = strlen(*(char **)(args->ud)) + 1;
-				memcpy(args->value, *(char **)args->ud, ret);
-
-				printf("encode string value %s\n", *(char **)(args->ud));
-				*p += sizeof(void *);
-			}
-			break;
-		}
-		case SPROTO_TSTRUCT:
-		{
-			void *data = args->ud;
-			if (args->index > 0)
-			{
-				uint32_t size = *(uint32_t *)data;
-				if (size < args->index)
-				{
-					ret = SPROTO_CB_NIL;
-					*p += (sizeof(uint32_t) + sizeof(void *));
-					break;
-				}
-				data += sizeof(uint32_t);
-				ret = sproto_encode(args->subtype, args->value, args->length, encode2, (*(void ***)data)[args->index - 1]);
-			}
-			else
-			{
-				ret = sproto_encode(args->subtype, args->value, args->length, encode2, *(char **)(args->ud));
-			}
-			break;
-		}
-	}
-	return (ret);
-}
 
 static int decode2(const struct sproto_arg *args)
 {
@@ -275,7 +164,7 @@ int main(int argc, char *argv[])
 	nest_1.f[1] = false;
 	nest_1.f[2] = true;	
 /*
-	int len = sproto_encode(type3, buf, sizeof(buf), encode2, &nest_1);
+	int len = sproto_encode(type3, buf, sizeof(buf), sprotoc_encode, &nest_1);
 	printf("encode len = %d\n", len);
 
 	int len2 = sproto_decode(type3, buf, len, decode, NULL);
@@ -295,7 +184,7 @@ int main(int argc, char *argv[])
 	t2_1.a->a = strdup("waimaokeji");
 	t2_1.a->b = 0x102030405;
 
-	int len6 = sproto_encode(type4, buf, sizeof(buf), encode2, &t2_1);
+	int len6 = sproto_encode(type4, buf, sizeof(buf), sprotoc_encode, &t2_1);
 	printf("encode len = %d\n", len6);
 
 	struct t2 t2_2;
@@ -321,7 +210,7 @@ int main(int argc, char *argv[])
 	t4_1.a[1]->a = "456";
 	t4_1.a[1]->b = 20;
 	
-	int len_t4 = sproto_encode(type_t4, buf, sizeof(buf), encode2, &t4_1);
+	int len_t4 = sproto_encode(type_t4, buf, sizeof(buf), sprotoc_encode, &t4_1);
 	printf("encode ret %d\n", len_t4);
 	sproto_decode(type_t4, buf, sizeof(buf), decode2, NULL);
 	struct t4 *ttt4;
@@ -366,7 +255,7 @@ int main(int argc, char *argv[])
 	t3_1.d[1]->b = 20;
 	t3_1.d[2]->b = 30;
 	
-	int len_t3 = sproto_encode(type_t3, buf, sizeof(buf), encode2, &t3_1);
+	int len_t3 = sproto_encode(type_t3, buf, sizeof(buf), sprotoc_encode, &t3_1);
 	struct t3 *ttt;
 	pool_init(&pool);
 	ret = sproto_decode_c(type_t3, buf, len_t3, (void **)&ttt, &pool);

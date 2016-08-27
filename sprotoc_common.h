@@ -50,5 +50,6 @@ struct sproto {
 
 void pool_init(struct pool *p);
 void pool_release(struct pool *p);
+int sprotoc_encode(const struct sproto_arg *args);
 
 #endif

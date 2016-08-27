@@ -3,7 +3,7 @@ all: proto generate_head test
 CFLAGS = -g -O0
 LDFLAGS = 
 
-test: test.c sproto.c
+test: test.c sproto.c sprotoc_encode.c
 	gcc  -o $@ $(CFLAGS) $(LDFLAGS) $^
 
 proto: testall.sproto
