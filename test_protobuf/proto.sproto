@@ -13,3 +13,7 @@
 	  sub 5 : *subproto
 }
 
+.ttt {
+     b1 1 : boolean
+     b2 2 : *boolean
+}

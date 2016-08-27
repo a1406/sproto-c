@@ -95,6 +95,56 @@ int test_sproto(struct sproto_type *type)
 	return (len);
 }
 
+static int decode2(const struct sproto_arg *args)
+{
+	int ret = 0;
+	void **p = (void **)&(args->ud);	
+//	struct nest *data = args->ud;
+	printf("%s tag[%d] type[%d] subtype[%p] value[%p] length[%d] index[%d] mainindex[%d]\n",
+		args->tagname, args->tagid, args->type, args->subtype, args->value, args->length,
+		args->index, args->mainindex);
+
+	switch (args->type)
+	{
+		case SPROTO_TINTEGER:
+		{
+			printf("%lx\n", *(uint64_t *)(args->value));
+//			void *data = args->ud;			
+//			*(uint64_t *)data = *(uint64_t *)args->value;
+//			*p += sizeof(uint64_t);			
+			ret = 8;
+			break;
+		}
+		case SPROTO_TBOOLEAN:
+		{
+			printf("%lx\n", *(uint64_t *)(args->value));
+//			void *data = args->ud;			
+//			*(bool *)data = *(bool *)args->value;
+//			*p += sizeof(bool);			
+			ret = 8;
+			break;
+		}
+		case SPROTO_TSTRING:
+		{
+			printf("%s\n", (char *)(args->value));
+//			void *data = args->ud;
+//			*(char **)data = strdup((const char *)(args->value));
+//			*p += sizeof(void *);			
+			break;
+		}
+		case SPROTO_TSTRUCT:
+		{
+//			void *data = args->ud;
+//			*(void **)data = malloc(10240);
+//			ret = sproto_decode(args->subtype, (args->value), args->length, decode, *(void **)data);
+			ret = sproto_decode(args->subtype, (args->value), args->length, decode2, NULL);						
+			break;
+		}
+	}
+	
+	return (0);
+}
+
 int main(int argc, char *argv[])
 {
 	static char buf[4096];
@@ -104,17 +154,51 @@ int main(int argc, char *argv[])
 	size_t size =  read(fd, buf, sizeof(buf));
 	struct sproto *sp = sproto_create(&buf[0], size);
 	close(fd);
-
-	struct sproto_type *type = sproto_type(sp, "proto");		
+/*
+	struct sproto_type *type_ttt = sproto_type(sp, "ttt");
+	struct ttt t1;
+	t1.b1 = true;
+	t1.n_b2 = 3;
+	bool b2[3];
+	t1.b2 = b2;
+	b2[0] = true;
+	b2[1] = false;
+	b2[2] = true;
+	struct pool pool;	
+	pool_init(&pool);
+	int len = sproto_encode(type_ttt, buf, sizeof(buf), sprotoc_encode, &t1);
+	printf("encode finished\n");
+	sproto_decode(type_ttt, buf, len, decode2, NULL);
+	
+	struct ttt *unpack;
+	int ret = sproto_decode_c(type_ttt, buf, len, (void **)&unpack, &pool);
+	pool_release(&pool);
+	return (0);
+*/
+	struct sproto_type *type = sproto_type(sp, "proto");
 
 	int len_protobuf, len_sproto;
+	struct timeval t1, t2, t3;
+
+	gettimeofday(&t1, NULL);
 	
 	int i;
 	for (i = 0; i < 1000000; ++i)
 		len_protobuf = test_protobuf();
 
+	gettimeofday(&t2, NULL);
+
 	for (i = 0; i < 1000000; ++i)
-		len_protobuf = test_sproto(type);	
+		len_sproto = test_sproto(type);
+
+	gettimeofday(&t3, NULL);
+
+	uint64_t diff1, diff2;
+	diff1 = (t2.tv_sec - t1.tv_sec) * 1000000 + (t2.tv_usec - t1.tv_usec);
+	diff2 = (t3.tv_sec - t2.tv_sec) * 1000000 + (t3.tv_usec - t2.tv_usec);	
+
+	printf("protobuf %d: %lu\n", len_protobuf, diff1);
+	printf("sproto   %d: %lu\n", len_sproto, diff2);
 	
     return 0;
 }

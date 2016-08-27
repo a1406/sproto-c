@@ -1357,11 +1357,11 @@ int sproto_decode_c(const struct sproto_type *st, const void * data, int size, v
 			{
 				case SPROTO_TINTEGER:
 					*(uint64_t *)(*ret) = v;
-					(*ret) += sizeof(uint64_t);
+					(p) += sizeof(uint64_t);
 					break;
 				case SPROTO_TBOOLEAN:
 					*(bool *)(*ret) = v;
-					(*ret) += sizeof(bool);					
+					(p) += sizeof(bool);					
 					break;
 			}
 //			args.value = &v;
