@@ -1,7 +1,9 @@
 #include <stdio.h>
 #include <assert.h>
 #include <stdint.h>
+#include <stdlib.h>
 #include <stdbool.h>
+#include <string.h>
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -13,7 +15,7 @@
 #include "../sprotoc_common.h"
 #include "test.h"
 
-int traverse_table(lua_State *L, struct sproto_type *sproto_type)
+int traverse_table(lua_State *L, struct sproto_type *sproto_type, void *data)
 {
 	lua_pushnil(L);
 	    // 现在的栈：-1 => nil; index => table
@@ -25,22 +27,37 @@ int traverse_table(lua_State *L, struct sproto_type *sproto_type)
 		lua_pushvalue(L, -2);
 			// 现在的栈：-1 => key; -2 => value; -3 => key; index => table
 
+		struct field *f = NULL;
+
 		const char* key = lua_tostring(L, -1);
-		printf("key = %s\n", key);
+		int i;
+		for (i = 0; i < sproto_type->n; ++i)
+		{
+			if (strcmp(sproto_type->f[i].name, key) == 0)
+			{
+				f = &sproto_type->f[i];
+				break;
+			}
+		}
+		assert(f);
+//		printf("key = %s\n", key);
 		lua_pop(L, 1);
 
 		int type = lua_type(L, -1);
 		switch (type)
 		{
 			case LUA_TNUMBER:
-				printf("value = %d\n", (int)(lua_tonumber(L, -1)));
+				assert(f->type == SPROTO_TINTEGER);
+//				printf("value = %d\n", (int)(lua_tonumber(L, -1)));
 				break;
 			case LUA_TSTRING:
-				printf("value = %s\n", lua_tostring(L, -1));
+				assert(f->type == SPROTO_TSTRING);				
+//				printf("value = %s\n", lua_tostring(L, -1));
 				break;
 			case LUA_TTABLE:
-				printf("value = new table\n");
-				traverse_table(L, sproto_type);
+				assert(f->type == SPROTO_TSTRUCT);								
+//				printf("value = new table\n");
+				traverse_table(L, sproto_type, data);
 				break;
 			default:
 				printf("value = none\n");
@@ -78,7 +95,9 @@ int traverse_main_table(lua_State *L, struct sproto_type *sproto_type)
 		int type = lua_type(L, -1);
 		assert(type == LUA_TTABLE);
 
-		traverse_table(L, sproto_type);
+		void *data = malloc(sproto_type->c_size);
+
+		traverse_table(L, sproto_type, data);
 		
 		lua_pop(L, 1);
 	}
