@@ -8,7 +8,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include "sproto.h"
-#include "common.h"
+#include "sprotoc_common.h"
 
 static int escape_type_name(char *name)
 {
