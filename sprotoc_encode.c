@@ -66,7 +66,7 @@ int sprotoc_encode(const struct sproto_arg *args)
 			{
 				*(int *)args->value = *(bool *)args->ud;
 				*p += sizeof(bool);			
-				ret = 8;
+				ret = 4;
 			}
 			break;
 		}

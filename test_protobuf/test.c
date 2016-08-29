@@ -7,6 +7,8 @@
 #include <unistd.h>
 #include <stdbool.h>
 #include <stdint.h>
+#include <sys/time.h>
+#include <assert.h>
 #include "../sproto.h"
 #include "../sprotoc_common.h"
 #include "test.h"
@@ -97,6 +99,7 @@ int test_sproto(struct sproto_type *type)
 	
 	struct proto *unpack;
 	int ret = sproto_decode_c(type, buf3, len4, (void **)&unpack, &pool);
+	assert(ret == 0);
 	pool_release(&pool);		
 	return (len3);
 }
