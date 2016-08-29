@@ -2,6 +2,10 @@
 #include <assert.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 #include "lua.h"
 #include "lualib.h"
 #include "lauxlib.h"
@@ -9,7 +13,7 @@
 #include "../sprotoc_common.h"
 #include "test.h"
 
-int traverse_table(lua_State *L)
+int traverse_table(lua_State *L, struct sproto_type *sproto_type)
 {
 	lua_pushnil(L);
 	    // 现在的栈：-1 => nil; index => table
@@ -36,7 +40,7 @@ int traverse_table(lua_State *L)
 				break;
 			case LUA_TTABLE:
 				printf("value = new table\n");
-				traverse_table(L);
+				traverse_table(L, sproto_type);
 				break;
 			default:
 				printf("value = none\n");
@@ -55,7 +59,7 @@ int traverse_table(lua_State *L)
 	return 0;
 }
 
-int traverse_main_table(lua_State *L)
+int traverse_main_table(lua_State *L, struct sproto_type *sproto_type)
 {
 	lua_pushnil(L);
 	    // 现在的栈：-1 => nil; index => table
@@ -74,7 +78,7 @@ int traverse_main_table(lua_State *L)
 		int type = lua_type(L, -1);
 		assert(type == LUA_TTABLE);
 
-		traverse_table(L);
+		traverse_table(L, sproto_type);
 		
 		lua_pop(L, 1);
 	}
@@ -83,10 +87,19 @@ int traverse_main_table(lua_State *L)
 
 int main(int argc, char *argv[])
 {
+	static char buf[4096];
+	int fd = open("1.spb", O_RDONLY);
+	size_t size =  read(fd, buf, sizeof(buf));
+	struct sproto *sp = sproto_create(&buf[0], size);
+	close(fd);
+
+	struct sproto_type *type = sproto_type(sp, "ScriptTable");
+	assert(type);
+	
     lua_State *L = luaL_newstate();
 	luaL_openlibs(L);
 	luaL_dofile(L, argv[1]);
 
-	traverse_main_table(L);
+	traverse_main_table(L, type);
     return 0;
 }
