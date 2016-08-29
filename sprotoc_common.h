@@ -13,6 +13,7 @@ struct field {
 	const char * name;
 	struct sproto_type * st;
 	int key;
+	int offset;
 };
 
 struct sproto_type {

@@ -6,7 +6,8 @@
 #include "msvcint.h"
 
 #include "sproto.h"
-
+#include "sprotoc_common.h"
+/*
 #define SPROTO_TARRAY 0x80
 #define CHUNK_SIZE 1000
 #define SIZEOF_LENGTH 4
@@ -19,6 +20,7 @@ struct field {
 	const char * name;
 	struct sproto_type * st;
 	int key;
+	int offset;
 };
 
 struct sproto_type {
@@ -53,7 +55,7 @@ struct sproto {
 	struct sproto_type * type;
 	struct protocol * proto;
 };
-
+*/
 void
 pool_init(struct pool *p) {
 	p->header = NULL;
@@ -314,6 +316,8 @@ import_type(struct sproto *s, struct sproto_type *t, const uint8_t * stream) {
 			++maxn;
 		}
 		last = tag;
+
+		f->offset = t->c_size;
 
 		if (f->type & SPROTO_TARRAY)
 		{
