@@ -1,0 +1,4 @@
+.ScriptTable {
+	     ID 1 : integer
+	     Path 2 : string
+}
