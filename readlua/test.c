@@ -111,7 +111,8 @@ int traverse_main_table(lua_State *L, struct sproto_type *sproto_type)
 		
 		lua_pop(L, 1);
 
-		struct ScriptTable *t = data;
+		struct ActiveSkillTable *t = data;
+		printf("\n");
 	}
 	return 0;
 }
