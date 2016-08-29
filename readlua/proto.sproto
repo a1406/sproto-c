@@ -2,3 +2,39 @@
 	     ID 1 : integer
 	     Path 2 : string
 }
+
+.SkillAction {
+	     a1 1 : string
+	     a2 2 : string
+	     a3 3 : string
+	     a4 4 : string	     
+}
+
+.SkillLength {
+	     a1 1 : integer
+	     a2 2 : integer
+	     a3 3 : integer
+	     a4 4 : integer	     
+}
+
+.SkillEffect {
+	     a1 1 : integer
+	     a2 2 : integer
+	     a3 3 : integer
+	     a4 4 : integer	     
+}
+
+.ActiveSkillTable {
+	  ID 1 : integer	     
+	  SkillAction 2 : SkillAction
+	  SkillLength 3 : SkillLength
+	  SkillEffect 4 : SkillEffect
+	  WarningEffect 5 : integer
+	  HitEffect 6 : integer
+	  ActionTime 7 : integer
+	  Interval 8 : integer
+	  FlyId 9 : integer
+	  CanMove 10 : integer
+	  StartSound 11 : integer
+	  HitSound 12 : integer
+}

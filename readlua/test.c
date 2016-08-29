@@ -33,7 +33,12 @@ int traverse_table(lua_State *L, struct sproto_type *sproto_type, void *data)
 		int i;
 		for (i = 0; i < sproto_type->n; ++i)
 		{
-			if (strcmp(sproto_type->f[i].name, key) == 0)
+			const char *type_name = sproto_type->f[i].name;
+			if (key[0] >= '0' && key[0] <= '9')
+			{
+				type_name++;
+			}
+			if (strcmp(type_name, key) == 0)
 			{
 				f = &sproto_type->f[i];
 				break;
@@ -48,23 +53,28 @@ int traverse_table(lua_State *L, struct sproto_type *sproto_type, void *data)
 		{
 			case LUA_TNUMBER:
 				assert(f->type == SPROTO_TINTEGER);
+				*(uint64_t *)(data + f->offset) = (uint64_t)(lua_tonumber(L, -1));
 //				printf("value = %d\n", (int)(lua_tonumber(L, -1)));
 				break;
 			case LUA_TSTRING:
-				assert(f->type == SPROTO_TSTRING);				
+				assert(f->type == SPROTO_TSTRING);
+				*(char **)(data + f->offset) = strdup(lua_tostring(L, -1));				
 //				printf("value = %s\n", lua_tostring(L, -1));
 				break;
 			case LUA_TTABLE:
-				assert(f->type == SPROTO_TSTRUCT);								
+				assert(f->type == SPROTO_TSTRUCT);
+				assert(f->st);
 //				printf("value = new table\n");
-				traverse_table(L, sproto_type, data);
+				*(void **)(data + f->offset) = malloc(f->st->c_size);
+				traverse_table(L, f->st, *(void **)(data + f->offset));
 				break;
 			default:
-				printf("value = none\n");
+				assert(0);
+//				printf("value = none\n");
 				break;
 				
 		}
-		printf(": value type %d %s\n", type, lua_typename(L, type));
+//		printf(": value type %d %s\n", type, lua_typename(L, type));
 
 //		data[key]=value;
 			// 弹出 value 和拷贝的 key，留下原始的 key 作为下一次 lua_next 的参数
@@ -89,7 +99,7 @@ int traverse_main_table(lua_State *L, struct sproto_type *sproto_type)
 			// 现在的栈：-1 => key; -2 => value; -3 => key; index => table
 
 		double key = lua_tonumber(L, -1);
-		printf("key = %d\n", (int)key);
+//		printf("key = %d\n", (int)key);
 		lua_pop(L, 1);
 
 		int type = lua_type(L, -1);
@@ -100,6 +110,8 @@ int traverse_main_table(lua_State *L, struct sproto_type *sproto_type)
 		traverse_table(L, sproto_type, data);
 		
 		lua_pop(L, 1);
+
+		struct ScriptTable *t = data;
 	}
 	return 0;
 }
@@ -112,7 +124,7 @@ int main(int argc, char *argv[])
 	struct sproto *sp = sproto_create(&buf[0], size);
 	close(fd);
 
-	struct sproto_type *type = sproto_type(sp, "ScriptTable");
+	struct sproto_type *type = sproto_type(sp, "ActiveSkillTable");
 	assert(type);
 	
     lua_State *L = luaL_newstate();
